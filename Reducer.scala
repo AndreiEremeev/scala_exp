@@ -23,8 +23,8 @@ object Reducer {
             val newAbstr = alphaConversion(new Abstr(variable, body), newVar)
             changeOfVariable(newAbstr, varOperand, expressionOperand)
           } else {
-            val (newBody, ok) = changeOfVariable(body, varOperand, expressionOperand)
-            (new Abstr(variable, newBody), ok)
+            val (newBody, _) = changeOfVariable(body, varOperand, expressionOperand)
+            (new Abstr(variable, newBody), true)
           }
         }
       }
@@ -65,7 +65,6 @@ object Reducer {
   
   def Reduce(term: Term): Term = {
     val (tmpTerm: Term, ok) = reduceOnce(term)
-    println(term)
     if (ok) {
       Reduce(tmpTerm)
     } else {
