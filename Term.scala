@@ -18,7 +18,7 @@ case class Appl(first: Term, second: Term) extends Term {
 
 case class Abstr(variable: Var, body: Term) extends Term {
   override def toString(): String =
-    "λ"+variable+".("+body+")"
+    "λ"+variable+"."+body+""
   override def isBelong(other: Var): Boolean =
     body.isBelong(other)
 }

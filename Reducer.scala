@@ -12,31 +12,38 @@ object Reducer {
       case Appl(first, second) => {
         val (newFirst, fOk) = changeOfVariable(first, varOperand, expressionOperand)
         val (newSecond, sOk) = changeOfVariable(second, varOperand, expressionOperand)
-        (new Appl(newFirst, newSecond), fOk || sOk)
+        (Appl(newFirst, newSecond), fOk || sOk)
       }
       case Abstr(variable, body) => {
         if (variable.name == varOperand.name) {
           (expression, false)
         } else {
-          if (expressionOperand.isBelong(variable)) {
-            val newVar = new Var(variable.name+"`")
-            val newAbstr = alphaConversion(new Abstr(variable, body), newVar)
-            changeOfVariable(newAbstr, varOperand, expressionOperand)
-          } else {
-            val (newBody, _) = changeOfVariable(body, varOperand, expressionOperand)
-            (new Abstr(variable, newBody), true)
-          }
+          val newVar = newRandVar(expressionOperand, variable)
+          val newAbstr = alphaConversion(Abstr(variable, body), newVar)
+          val (newBody, ok) = changeOfVariable(newAbstr.body, varOperand, expressionOperand)
+          (Abstr(newVar, newBody), ok)
         }
       }
   }
-
-  def alphaConversion(abstr: Abstr, variable: Var): Abstr = {
-    val (newBody, _) = changeOfVariable(abstr.body, abstr.variable, variable)
-    new Abstr(variable, newBody)
+  def newRandVar(expression: Term, oldVar: Var): Var = {
+    if (!expression.isBelong(oldVar)) {
+      return oldVar
+    }
+    Var(oldVar+"`")
   }
 
-  def betaConversion(abstr: Abstr, term: Term): (Term, Boolean) =
-    changeOfVariable(abstr.body, abstr.variable, term)
+  def alphaConversion(abstr: Abstr, variable: Var): Abstr = {
+    if (abstr.variable.name == variable.name) {
+      return abstr
+    }
+    val (newBody, _) = changeOfVariable(abstr.body, abstr.variable, variable)
+    Abstr(variable, newBody)
+  }
+
+  def betaConversion(abstr: Abstr, term: Term): (Term, Boolean) = {
+    val (newTerm, _) = changeOfVariable(abstr.body, abstr.variable, term)
+    return (newTerm, true)
+  }
 
   def reduceOnce(term: Term): (Term, Boolean) =
     term match {
@@ -47,16 +54,16 @@ object Reducer {
           case default =>
             val (newFirst, fOk) = reduceOnce(first)
             if (fOk) {
-              (new Appl(newFirst, second), true)
+              (Appl(newFirst, second), true)
             } else {
               val (newSecond, sOk) = reduceOnce(second)
-              (new Appl(newFirst, newSecond), sOk)
+              (Appl(newFirst, newSecond), sOk)
             }
         }
       }
       case Abstr(variable, body) => {
         val (newBody, ok) = reduceOnce(body)
-        (new Abstr(variable, newBody), ok)
+        (Abstr(variable, newBody), ok)
       }
       case Var(variable) => {
         (term, false)
